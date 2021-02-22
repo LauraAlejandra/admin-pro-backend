@@ -5,10 +5,22 @@ const bcrypt = require('bcryptjs');
 const { generarJWT } = require("../helpers/jwt");
 
 const getUsuarios = async(req, res) => {
-    const usuarios = await Usuario.find({}, 'nombre email role google');
+    const desde = Number(req.query.desde) || 0; //para obtener los parametros de la url, con el nombre del param y lo transformamos a numero porque es string
+    //si no se mando el param se pone un 0
+    //const usuarios = await Usuario.find({}, 'nombre email role google').skip(desde).limit(5); //esto hace que muestre los registros desde el numero y solo muestrs 5 registros por pagina
+    //const total = await Usuario.countDocuments();
+
+    //el promise.all permite ejecutar promesas al mismo tiempo y regresa un arreglo con los resultados de las promesas [usuarios, total] y se guardan ahi
+    //con la desestructuracion se asignan las posiciones del arreglo 
+    const [usuarios, total] = await Promise.all([
+        Usuario.find({}, 'nombre email role google img')
+        .skip(desde).limit(5), //primera posicion del arreglo
+        Usuario.countDocuments() //segunda
+    ]);
     res.json({
         ok: true,
-        usuarios
+        usuarios,
+        total
         //uid: req.uid //esto es lo que se configuro en el middleware, ahi tenemos el id de la persona que hizo la peticion
     })
 }
